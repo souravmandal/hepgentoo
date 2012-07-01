@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<longdescription lang="en">
+ThePEG project is a toolkit for providing a common platform for using and building event generators in C++.  ThePEG has been broken out from the PYTHIA7 program to better factorize the parts which were PYTHIA-specific from those which are general model-independent components of the toolkit and which can be used by any event generator model.
+<use>
+  <flag name="lhapdf">Build with Les Houches parton distribution function support</flag>
+  <flag name="hepmc">Build with HepMC support</flag>
+  <flag name="unitchecks">unitchecks</flag>
+</use>
+</pkgmetadata>

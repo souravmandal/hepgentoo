@@ -1,0 +1,16 @@
+diff -urN SPheno3.0.beta50/Makefile SPheno3.0.beta50_gfortran/Makefile
+--- SPheno3.0.beta50/Makefile	2010-06-08 17:44:30.000000000 +0900
++++ SPheno3.0.beta50_gfortran/Makefile	2011-03-26 04:46:28.658508530 +0900
+@@ -3,10 +3,10 @@
+ # cases NAG's nagfor, gfortran, g95, Lahey's lf95 and Intels ifort
+ # Please uncomment the corresponding line
+ # F90 = nagfor
+-# F90 = gfortran
++F90 = gfortran
+ # F90 = g95
+ # F90 = lf95
+-F90 = ifort
++#F90 = ifort
+ bin/SPheno:
+ 	cd src ; ${MAKE} F90=${F90}
+ clean:

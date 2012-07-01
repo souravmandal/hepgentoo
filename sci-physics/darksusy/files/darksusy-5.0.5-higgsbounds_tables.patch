@@ -1,0 +1,53 @@
+diff -urN darksusy-5.0.5/contrib/HiggsBounds-1.0.3/HiggsBounds-f77/makefile.in darksusy-5.0.5-higgsbounds_tables/contrib/HiggsBounds-1.0.3/HiggsBounds-f77/makefile.in
+--- darksusy-5.0.5/contrib/HiggsBounds-1.0.3/HiggsBounds-f77/makefile.in	2009-03-12 16:42:56.000000000 +0900
++++ darksusy-5.0.5-higgsbounds_tables/contrib/HiggsBounds-1.0.3/HiggsBounds-f77/makefile.in	2010-01-21 18:31:32.000000000 +0900
+@@ -1,6 +1,7 @@
+ # Modification by Joakim Edsjo 2009-03-12. Pick things that are originally
+ # set in configure script from DarkSUSY configure script instead
+-THEINSTDIR=$(PWD)
++#THEINSTDIR=$(PWD)
++THEINSTDIR=@prefix@/share/DarkSUSY
+ HBLIBDIR=../../../lib
+ 
+ # environment variables
+@@ -118,4 +119,4 @@
+              example_programs/example-SM_vs_4thGen \
+              example_programs/HBwithFH \
+              example_programs/HBwithCPsuperH
+-    
+\ No newline at end of file
++    
+diff -urN darksusy-5.0.5/makefile.in darksusy-5.0.5-higgsbounds_tables/makefile.in
+--- darksusy-5.0.5/makefile.in	2009-05-21 06:20:25.000000000 +0900
++++ darksusy-5.0.5-higgsbounds_tables/makefile.in	2010-01-21 19:25:27.000000000 +0900
+@@ -72,7 +72,7 @@
+ 	mkdir -p lib
+ 	cd $(DS_ROOT)/src; make all
+ 
+-install : install_builds install_tables
++install : install_builds install_tables install_hb_tables
+ 
+ # This target creates binary tables and main programs right away if 
+ # install is local i.e. make install not needed afterwards in this case
+@@ -127,12 +127,19 @@
+ installcheck:
+ 	echo "this should test the installation"
+ 
+-really_all : all install_tables
++really_all : all install_tables 
+ 
+-install_tables :
++install_tables : 
+ 	mkdir -p $(DS_INSTALL)/share/DarkSUSY
+ 	cd $(DS_ROOT)/share/DarkSUSY; make all
+ 
++install_hb_tables :
++	mkdir -p $(DS_INSTALL)/share/DarkSUSY
++	cd $(DS_ROOT)/contrib/HiggsBounds/HiggsBounds-f77; \
++	cp -pr LEPtables $(DS_INSTALL)/share/DarkSUSY; \
++	cp -pr TEVtables $(DS_INSTALL)/share/DarkSUSY; \
++	cp -pr SMBRs $(DS_INSTALL)/share/DarkSUSY
++
+ libisajet :
+ 	cd $(DS_ROOT)/contrib/isajet; make
+ 
