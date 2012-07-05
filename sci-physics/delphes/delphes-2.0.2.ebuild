@@ -33,7 +33,6 @@ pkg_nofetch() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/${PN}-ptiso.patch"
 	epatch "${FILESDIR}/${PN}-memleak.patch"
 	./genMakefile.tcl >| Makefile
 	cp "${FILESDIR}/Makefile.arch" .

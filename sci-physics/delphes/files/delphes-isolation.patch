@@ -1,0 +1,12 @@
+diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2_isolation/src/SmearUtil.cc
+--- Delphes_V_2.0.2/src/SmearUtil.cc	2012-04-30 16:47:55.000000000 +0900
++++ Delphes_V_2.0.2_isolation/src/SmearUtil.cc	2012-07-05 17:09:29.597185090 +0900
+@@ -1439,7 +1439,7 @@
+          if(
+              (genDeltaR==0)  // rejets the track of the particle itself
+            ) continue ;
+-           deltar=genDeltaR;	// finds the closest track
++           if (genDeltaR < deltar) deltar=genDeltaR;	// finds the closest track
+ 
+          // as long as (genDeltaR==0) is put above, the particle itself is not taken into account
+ 	 if( genDeltaR < ISOL_trk_Cone && tracks[i].PT>ISOL_trk_PT) ptiso += tracks[i].PT; // dR cut on tracks
