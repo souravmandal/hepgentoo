@@ -33,7 +33,7 @@ pkg_nofetch() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/${PN}-memleak.patch"
+	epatch "${FILESDIR}/${PN}-isolation.patch"
 	./genMakefile.tcl >| Makefile
 	cp "${FILESDIR}/Makefile.arch" .
 	cp Makefile Makefile.bck
