@@ -1,0 +1,2 @@
+# Provided by Mathematica
+LD_LIBRARY_MASK="libML32i3.so libML64i3.so"

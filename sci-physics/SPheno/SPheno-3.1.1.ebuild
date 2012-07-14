@@ -6,17 +6,16 @@ EAPI=3
 
 inherit toolchain-funcs eutils
 
-MY_PN="SPheno"
-MY_P="${MY_PN}${PV}"
+MY_P="${PN}${PV}"
 S="${WORKDIR}/${MY_P}"
 
 MY_WEBROOT="http://www.physik.uni-wuerzburg.de/~porod/"
 
 DESCRIPTION="SUSY spectrum and decay calculator"
-HOMEPAGE="${MY_WEBROOT}${MY_PN}.html"
+HOMEPAGE="${MY_WEBROOT}${PN}.html"
 SRC_URI="${MY_WEBROOT}code/${MY_P}.tar.gz
-		doc? ( ${MY_WEBROOT}doc/${MY_PN}.pdf
-				${MY_WEBROOT}doc/${MY_PN}3.pdf )"
+		doc? ( ${MY_WEBROOT}doc/${PN}.pdf
+				${MY_WEBROOT}doc/${PN}3.pdf )"
 
 LICENSE="as-is"
 SLOT="0"
@@ -44,7 +43,7 @@ src_install() {
 	dobin bin/SPheno
 	dodoc README
 	if use doc; then
-		dodoc "${DISTDIR}/${MY_PN}.pdf"
-		dodoc "${DISTDIR}/${MY_PN}3.pdf"
+		dodoc "${DISTDIR}/${PN}.pdf"
+		dodoc "${DISTDIR}/${PN}3.pdf"
 	fi
 }

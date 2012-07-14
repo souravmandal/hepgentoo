@@ -1,0 +1,23 @@
+diff -urN LoopTools-2.7/makefile.in LoopTools-2.7_destdir/makefile.in
+--- LoopTools-2.7/makefile.in	2011-07-22 15:07:21.000000000 +0900
++++ LoopTools-2.7_destdir/makefile.in	2012-07-12 17:31:31.389963783 +0900
+@@ -38,13 +38,13 @@
+ 	cd $(BLD) && $(MAKE) $(ARGS) $@
+ 
+ install: lib frontend
+-	-mkdir $(PREFIX)
+-	-mkdir $(LIBDIR) $(BINDIR) $(INCLUDEDIR)
+-	cp -p $(BLD)/$(LIB) $(LIBDIR)
+-	cp -p $(INCLUDE$(QUADSUFFIX)) $(INCLUDEDIR)
++	-mkdir $(DESTDIR)/$(PREFIX)
++	-mkdir $(DESTDIR)/$(LIBDIR) $(D)/$(BINDIR) $(D)/$(INCLUDEDIR)
++	cp -p $(BLD)/$(LIB) $(DESTDIR)/$(LIBDIR)
++	cp -p $(INCLUDE$(QUADSUFFIX)) $(DESTDIR)/$(INCLUDEDIR)
+ 	strip $(BLD)/$(FE)
+-	cp -p $(BLD)/fcc $(BLD)/$(FE) $(BINDIR)
+-	test ! -f $(BLD)/$(MFE) || { strip $(BLD)/$(MFE) ; cp -p $(BLD)/$(MFE) $(BINDIR); }
++	cp -p $(BLD)/fcc $(BLD)/$(FE) $(DESTDIR)/$(BINDIR)
++	test ! -f $(BLD)/$(MFE) || { strip $(BLD)/$(MFE) ; cp -p $(BLD)/$(MFE) $(DESTDIR)/$(BINDIR); }
+ 
+ force: $(BLD)/timestamp
+ 
