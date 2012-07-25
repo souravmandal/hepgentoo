@@ -56,7 +56,7 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface
  #endif
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-24 01:58:46.317811911 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-26 00:58:38.145476946 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -91,21 +91,18 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
        //Bin tracks to make the link 
        float  iEtaTrack[TrackCentral.size()];
        float  iPhiTrack[TrackCentral.size()];
-@@ -219,6 +227,22 @@
+@@ -219,6 +227,19 @@
    } // for itJet : loop on all jets
  }
  
 +void JetsUtil::RunSubjets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets)
 +{
-+  TClonesArray *elementSubjet;
-+  TRootParticle *part;
-+  
 +  for (unsigned int i = 0; i < sorted_subjets.size(); i++) {
-+    elementSubjet = (TClonesArray *) branchSubjet->NewEntry();
++    TClonesArray *elementSubjet = (TClonesArray *) branchSubjet->NewEntry();
 +    elementSubjet->SetClass(TRootParticle::Class(), sorted_subjets[i].size());
 +    for (unsigned int j = 0; j < sorted_subjets[i].size(); j++) {
 +      fastjet::PseudoJet tj = sorted_subjets[i][j];
-+      part = (TRootParticle *) elementSubjet->AddrAt(j);
++      TRootParticle *part = (TRootParticle *) elementSubjet->AddrAt(j);
 +      part->Set(tj.px(), tj.py(), tj.pz(), tj.E());
 +    }
 +  }
