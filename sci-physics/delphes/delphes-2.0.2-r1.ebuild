@@ -19,7 +19,10 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="examples"
 
-COMMON_DEPEND="sci-physics/root"
+COMMON_DEPEND="sci-physics/root
+			sci-physics/clhep
+			sci-physics/fastjet
+			sci-physics/hepmc"
 DEPEND="dev-lang/tcl
 		${COMMON_DEPEND}"
 RDEPEND="${COMMON_DEPEND}"
@@ -34,6 +37,9 @@ pkg_nofetch() {
 
 src_prepare() {
 	epatch "${FILESDIR}/${PN}-isolation.patch"
+	epatch "${FILESDIR}/${PN}-systemlibs.patch"
+	epatch "${FILESDIR}/${PN}-subjets.patch"
+	# Weird build system
 	./genMakefile.tcl >| Makefile
 	cp "${FILESDIR}/Makefile.arch" .
 	cp Makefile Makefile.bck
@@ -64,6 +70,7 @@ src_install() {
 	INCDIR="${D}/usr/include/Delphes"
 	mkdir -pv "${INCDIR}"
 	cp -rv interface "${INCDIR}/"  # This is horrible
+	rm -rf "${INCDIR}/interface/.svn"  # This also sucks
 	mkdir -pv "${INCDIR}/ExRootAnalysis"
 	cp -v Utilities/ExRootAnalysis/interface/* "${INCDIR}/ExRootAnalysis"
 	dodoc CHANGELOG CREDITS FAQ
