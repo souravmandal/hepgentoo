@@ -1,11 +1,11 @@
 diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
 --- Delphes_V_2.0.2/Delphes.cpp	2012-04-30 16:45:00.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-07-24 02:00:15.203614146 +0900
++++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-07-26 09:26:24.021498847 +0900
 @@ -273,6 +273,7 @@
    ExRootTreeWriter *treeWriter = new ExRootTreeWriter(outputfilename, "Analysis");
    ExRootTreeBranch *branchTauJet = treeWriter->NewBranch("TauJet", TRootTauJet::Class());
    ExRootTreeBranch *branchJet = treeWriter->NewBranch("Jet", TRootJet::Class());
-+  ExRootTreeBranch *branchSubjet = treeWriter->NewBranch("Subjet",  TClonesArray::Class());
++  ExRootTreeBranch *branchSubjet = treeWriter->NewBranch("Subjet",  TObjArray::Class());
    ExRootTreeBranch *branchElectron = treeWriter->NewBranch("Electron", TRootElectron::Class());
    ExRootTreeBranch *branchMuon = treeWriter->NewBranch("Muon", TRootMuon::Class());
    ExRootTreeBranch *branchPhoton = treeWriter->NewBranch("Photon", TRootPhoton::Class());
