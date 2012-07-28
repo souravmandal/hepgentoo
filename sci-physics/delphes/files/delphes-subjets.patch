@@ -1,11 +1,11 @@
 diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
 --- Delphes_V_2.0.2/Delphes.cpp	2012-04-30 16:45:00.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-07-26 09:26:24.021498847 +0900
++++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-07-28 23:19:23.767977608 +0900
 @@ -273,6 +273,7 @@
    ExRootTreeWriter *treeWriter = new ExRootTreeWriter(outputfilename, "Analysis");
    ExRootTreeBranch *branchTauJet = treeWriter->NewBranch("TauJet", TRootTauJet::Class());
    ExRootTreeBranch *branchJet = treeWriter->NewBranch("Jet", TRootJet::Class());
-+  ExRootTreeBranch *branchSubjet = treeWriter->NewBranch("Subjet",  TObjArray::Class());
++  ExRootTreeBranch *branchSubJet = treeWriter->NewBranch("SubJet",  TRootSubJet::Class());
    ExRootTreeBranch *branchElectron = treeWriter->NewBranch("Electron", TRootElectron::Class());
    ExRootTreeBranch *branchMuon = treeWriter->NewBranch("Muon", TRootMuon::Class());
    ExRootTreeBranch *branchPhoton = treeWriter->NewBranch("Photon", TRootPhoton::Class());
@@ -23,13 +23,13 @@ diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
        // 2.2.3 ************* jets, B-tag, tau jets
 -      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO);
 +      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO,sorted_subjets);
-+      JETRUN->RunSubjets(treeWriter, branchSubjet, sorted_subjets);
++      JETRUN->RunSubJets(treeWriter, branchSubJet, sorted_subjets);
        JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO);
        JETRUN->RunTauJets(treeWriter,branchTauJet,sorted_jets,towers, TrackCentral,NTrackJet,EHADEEM,NCALO);
        
 diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface/JetsUtil.h
 --- Delphes_V_2.0.2/interface/JetsUtil.h	2012-04-30 16:40:27.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/interface/JetsUtil.h	2012-07-24 00:36:17.201858166 +0900
++++ Delphes_V_2.0.2-subjets/interface/JetsUtil.h	2012-07-28 23:18:27.644309081 +0900
 @@ -79,12 +79,14 @@
    ~JetsUtil() {delete DET; delete plugins;};
    void init(); // for constructors
@@ -41,7 +41,7 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface
    
    void RunJetBtagging(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchJet,const vector<fastjet::PseudoJet> & sorted_jets,const TSimpleArray<TRootC::GenParticle> & NFCentralQ, const vector<int> &NTrackJet, const vector<float> &EHADEEM, const vector<int> &NCALO);
    
-+  void RunSubjets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets);
++  void RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets);
 +  
    void RunTauJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchTauJet,const vector<fastjet::PseudoJet> & sorted_jets,const vector<PhysicsTower> & towers, const vector<TRootTracks> & TrackCentral, const vector<int> &NTrackJet, const vector<float> &EHADEEM,const vector<int> &NCALO);
  
@@ -56,7 +56,7 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface
  #endif
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-26 09:19:44.393300319 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-28 23:29:00.298845080 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -91,20 +91,19 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
        //Bin tracks to make the link 
        float  iEtaTrack[TrackCentral.size()];
        float  iPhiTrack[TrackCentral.size()];
-@@ -219,6 +227,20 @@
+@@ -219,6 +227,19 @@
    } // for itJet : loop on all jets
  }
  
-+void JetsUtil::RunSubjets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets)
++void JetsUtil::RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets)
 +{
++  TRootSubJet *elementSubjet;
 +  for (unsigned int i = 0; i < sorted_subjets.size(); i++) {
-+    TObjArray *elementSubjet = (TObjArray *) branchSubjet->NewEntry();
-+    elementSubjet->SetOwner(kTRUE);
 +    for (unsigned int j = 0; j < sorted_subjets[i].size(); j++) {
 +      fastjet::PseudoJet tj = sorted_subjets[i][j];
-+      TRootParticle *part = new TRootParticle();
-+      part->Set(tj.px(), tj.py(), tj.pz(), tj.E());
-+      elementSubjet->AddLast(part);
++      elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
++      elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
++      elementSubjet->child = i;
 +    }
 +  }
 +}
@@ -112,3 +111,49 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
  void JetsUtil::RunTauJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchTauJet,const vector<fastjet::PseudoJet> & sorted_jets,const vector<PhysicsTower> & towers, const vector<TRootTracks> & TrackCentral, const vector<int> &NTrackJet, const vector<float> &EHADEEM,const vector<int> &NCALO)
  {
    TRootTauJet *elementTauJet;
+diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h
+--- Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-04-30 16:43:10.000000000 +0900
++++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-07-28 23:24:18.829492297 +0900
+@@ -459,6 +459,20 @@
+   ClassDef(TRootJet, 1)
+ };
+ 
++//---------------------------------------------------------------------------
++
++class TRootSubJet: public TRootParticle
++{
++public:
++  TRootSubJet() {};
++
++  static TCompare *fgCompare; //!
++
++  int child; // index of child jet
++  
++  ClassDef(TRootSubJet, 1)
++};
++
+ //------------------------------------------------------------------------------
+ 
+ class TRootTrigger: public TSortableObject
+diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/src/BlockClasses.cc Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/src/BlockClasses.cc
+--- Delphes_V_2.0.2/Utilities/ExRootAnalysis/src/BlockClasses.cc	2012-04-30 16:43:18.000000000 +0900
++++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/src/BlockClasses.cc	2012-07-28 23:33:20.128940104 +0900
+@@ -43,6 +43,7 @@
+ TCompare *TRootPhoton::fgCompare = TComparePT<TRootPhoton>::Instance();
+ TCompare *TRootTauJet::fgCompare = TComparePT<TRootTauJet>::Instance();
+ TCompare *TRootJet::fgCompare = TComparePT<TRootJet>::Instance();
++TCompare *TRootSubJet::fgCompare = TComparePT<TRootSubJet>::Instance();
+ TCompare *TRootTracks::fgCompare = 0;
+ TCompare *TRootETmis::fgCompare = 0;
+ TCompare *TRootCalo::fgCompare = 0;
+diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/src/BlockClassesLinkDef.h Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/src/BlockClassesLinkDef.h
+--- Delphes_V_2.0.2/Utilities/ExRootAnalysis/src/BlockClassesLinkDef.h	2012-04-30 16:43:17.000000000 +0900
++++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/src/BlockClassesLinkDef.h	2012-07-28 23:13:58.125098643 +0900
+@@ -52,6 +52,7 @@
+ #pragma link C++ class TRootPhoton;
+ #pragma link C++ class TRootTauJet;
+ #pragma link C++ class TRootJet;
++#pragma link C++ class TRootSubJet;
+ #pragma link C++ class TRootTracks;
+ #pragma link C++ class TRootETmis;
+ #pragma link C++ class TRootCalo;
