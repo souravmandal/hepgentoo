@@ -59,7 +59,7 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface
  #endif
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-29 01:49:32.762648554 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-29 02:08:58.204593615 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -108,7 +108,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +225,29 @@
+@@ -215,10 +225,30 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
@@ -132,6 +132,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +          elementSubjet->Child = jet_count;
 +        }
 +        jet_count++;
++    }
 +  }
 +}
 +
