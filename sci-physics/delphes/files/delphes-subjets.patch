@@ -78,7 +78,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 08:57:02.149788818 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 10:24:41.343673402 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -126,7 +126,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +224,31 @@
+@@ -215,10 +224,32 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
@@ -144,11 +144,12 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +  for (unsigned int i = 0; i < sorted_subjets.size(); i++) {
 +    if (!jet_ptmask[i]) { // if child jet doesn't get PT cut
 +        for (unsigned int j = 0; j < sorted_subjets[i].size(); j++) {
-+          if(sorted_subjets[i][j].pt() < DET->PTCUT_subjet) continue;
 +          fastjet::PseudoJet tj = sorted_subjets[i][j];
-+          elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
-+          elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
-+          elementSubjet->Child = jet_count;
++        if(tj.pt() >= DET->PTCUT_subjet) {;
++            elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
++            elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
++            elementSubjet->Child = jet_count;
++          }
 +        }
 +        jet_count++;
 +    }
