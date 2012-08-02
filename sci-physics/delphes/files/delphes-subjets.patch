@@ -59,8 +59,16 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface
  #endif
 diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interface/SmearUtil.h
 --- Delphes_V_2.0.2/interface/SmearUtil.h	2012-04-30 16:40:28.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/interface/SmearUtil.h	2012-07-30 19:47:24.679860865 +0900
-@@ -195,6 +195,7 @@
++++ Delphes_V_2.0.2-subjets/interface/SmearUtil.h	2012-08-02 08:43:35.439591422 +0900
+@@ -177,6 +177,7 @@
+   float PTCUT_elec;
+   float PTCUT_muon;
+   float PTCUT_jet;
++  float PTCUT_subjet;
+   float PTCUT_gamma;
+   float PTCUT_taujet;
+ 
+@@ -195,6 +196,7 @@
    int    JET_jetalgo;
    double JET_seed;
    double JET_overlap;
@@ -70,7 +78,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-07-30 19:55:09.570641758 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 08:57:02.149788818 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -118,7 +126,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +224,30 @@
+@@ -215,10 +224,31 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
@@ -134,8 +142,9 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +  TRootSubJet *elementSubjet;
 +  int jet_count = 0;
 +  for (unsigned int i = 0; i < sorted_subjets.size(); i++) {
-+    if (!jet_ptmask[i]) { // if jet doesn't get PT cut
++    if (!jet_ptmask[i]) { // if child jet doesn't get PT cut
 +        for (unsigned int j = 0; j < sorted_subjets[i].size(); j++) {
++          if(sorted_subjets[i][j].pt() < DET->PTCUT_subjet) continue;
 +          fastjet::PseudoJet tj = sorted_subjets[i][j];
 +          elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
 +          elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
@@ -151,8 +160,16 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    TRootTauJet *elementTauJet;
 diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil.cc
 --- Delphes_V_2.0.2/src/SmearUtil.cc	2012-04-30 16:47:55.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-07-30 19:49:53.366709781 +0900
-@@ -140,7 +140,8 @@
++++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-08-02 08:41:18.545984394 +0900
+@@ -122,6 +122,7 @@
+   PTCUT_elec      = 10.0;
+   PTCUT_muon      = 10.0;
+   PTCUT_jet       = 20.0;
++  PTCUT_subjet    = 10.0;
+   PTCUT_gamma     = 10.0;
+   PTCUT_taujet    = 10.0;
+ 
+@@ -140,7 +141,8 @@
    JET_jetalgo      = 2;              // 1 for Cone algorithm, 2 for MidPoint algorithm, 3 for SIScone algorithm, 4 for kt algorithm
    JET_seed         = 1.0;            // minimum seed to start jet reconstruction
    JET_Eflow        = 0;		     // 1 for Energy flow in jets reco ; 0 if not
@@ -162,7 +179,15 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
    // Tagging definition
    BTAG_func_b      = "0.4  + 0*x + 0*y";	// efficiency functions (x=Pt, y=eta)  in ROOT::TF2 format
    BTAG_func_c      = "0.1  + 0*x + 0*y";
-@@ -306,6 +307,7 @@
+@@ -287,6 +289,7 @@
+   PTCUT_elec      = DET.PTCUT_elec;
+   PTCUT_muon      = DET.PTCUT_muon;
+   PTCUT_jet       = DET.PTCUT_jet;
++  PTCUT_subjet    = DET.PTCUT_subjet;
+   PTCUT_gamma     = DET.PTCUT_gamma;
+   PTCUT_taujet    = DET.PTCUT_taujet;
+ 
+@@ -306,6 +309,7 @@
    JET_jetalgo      = DET.JET_jetalgo;
    JET_seed         = DET.JET_seed;
    JET_Eflow        = DET.JET_Eflow;
@@ -170,7 +195,15 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
  
    // Tagging definition
    BTAG_func_b      = DET.BTAG_func_b;
-@@ -464,6 +466,7 @@
+@@ -446,6 +450,7 @@
+   PTCUT_elec      = DET.PTCUT_elec;
+   PTCUT_muon      = DET.PTCUT_muon;
+   PTCUT_jet       = DET.PTCUT_jet;
++  PTCUT_subjet    = DET.PTCUT_subjet;
+   PTCUT_gamma     = DET.PTCUT_gamma;
+   PTCUT_taujet    = DET.PTCUT_taujet;
+ 
+@@ -464,6 +469,7 @@
    JET_jetalgo      = DET.JET_jetalgo;
    JET_seed         = DET.JET_seed;
    JET_Eflow        = DET.JET_Eflow;
@@ -178,7 +211,15 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
  
    // Tagging definition
    BTAG_func_b      = DET.BTAG_func_b;
-@@ -673,6 +676,7 @@
+@@ -658,6 +664,7 @@
+     else if(strstr(temp_string.c_str(),"PTCUT_elec"))       {curstring >> varname >> value; PTCUT_elec        = value;}
+     else if(strstr(temp_string.c_str(),"PTCUT_muon"))       {curstring >> varname >> value; PTCUT_muon        = value;}
+     else if(strstr(temp_string.c_str(),"PTCUT_jet"))        {curstring >> varname >> value; PTCUT_jet         = value;}
++    else if(strstr(temp_string.c_str(),"PTCUT_subjet"))     {curstring >> varname >> value; PTCUT_subjet         = value;}
+     else if(strstr(temp_string.c_str(),"PTCUT_gamma"))      {curstring >> varname >> value; PTCUT_gamma       = value;}
+     else if(strstr(temp_string.c_str(),"PTCUT_taujet"))     {curstring >> varname >> value; PTCUT_taujet      = value;}
+     else if(strstr(temp_string.c_str(),"ZDC_gamma_E"))      {curstring >> varname >> value; ZDC_gamma_E      = value;}
+@@ -673,6 +680,7 @@
      else if(strstr(temp_string.c_str(),"JET_jetalgo"))      {curstring >> varname >> ivalue;JET_jetalgo       = ivalue;}
      else if(strstr(temp_string.c_str(),"JET_seed"))         {curstring >> varname >> value; JET_seed          = value;}
      else if(strstr(temp_string.c_str(),"JET_Eflow"))        {curstring >> varname >> ivalue; JET_Eflow        = ivalue;}
@@ -186,6 +227,15 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
   
      else if(strstr(temp_string.c_str(),"BTAG_func_b"))      {curstring >> varname >> svalue; BTAG_func_b     = svalue;}
      else if(strstr(temp_string.c_str(),"BTAG_func_c"))	    {curstring >> varname >> svalue; BTAG_func_c     = svalue;}
+@@ -1057,6 +1065,8 @@
+ 	<< left << setw(20) <<PTCUT_muon         <<""<< right << setw(10)<<"*"<<"\n";
+   f_out << left << setw(40) <<"* Minimum pT for jets: "<<""
+ 	<< left << setw(20) <<PTCUT_jet          <<""<< right << setw(10)<<"*"<<"\n";
++  f_out << left << setw(40) <<"* Minimum pT for subjets: "<<""
++	<< left << setw(20) <<PTCUT_subjet       <<""<< right << setw(10)<<"*"<<"\n";
+   f_out << left << setw(40) <<"* Minimum pT for Tau-jets: "<<""
+ 	<< left << setw(20) <<PTCUT_taujet       <<""<< right << setw(10)<<"*"<<"\n";
+   f_out << left << setw(40) <<"* Minimum pT for photons: "<<""
 diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h
 --- Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-04-30 16:43:10.000000000 +0900
 +++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-07-29 00:41:29.231311933 +0900
