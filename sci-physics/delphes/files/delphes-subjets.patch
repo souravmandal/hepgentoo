@@ -78,7 +78,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 10:24:41.343673402 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 10:38:31.482850368 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -144,8 +144,8 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +  for (unsigned int i = 0; i < sorted_subjets.size(); i++) {
 +    if (!jet_ptmask[i]) { // if child jet doesn't get PT cut
 +        for (unsigned int j = 0; j < sorted_subjets[i].size(); j++) {
-+          fastjet::PseudoJet tj = sorted_subjets[i][j];
-+        if(tj.pt() >= DET->PTCUT_subjet) {;
++          const fastjet::PseudoJet &tj = sorted_subjets[i][j];
++          if(tj.pt() >= DET->PTCUT_subjet) {;
 +            elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
 +            elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
 +            elementSubjet->Child = jet_count;
