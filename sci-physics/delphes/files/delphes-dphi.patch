@@ -1,0 +1,12 @@
+diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-dphi/src/SmearUtil.cc
+--- Delphes_V_2.0.2/src/SmearUtil.cc	2012-04-30 16:47:55.000000000 +0900
++++ Delphes_V_2.0.2-dphi/src/SmearUtil.cc	2012-08-02 10:00:26.631860875 +0900
+@@ -1541,7 +1541,7 @@
+                 break;
+         } 
+    }
+-   if (phi > pi-dphi) iPhi = pi-dphi;
++   if (phi > pi-dphi) iPhi = pi-dphi/2.0;
+    return index;
+ }
+ 

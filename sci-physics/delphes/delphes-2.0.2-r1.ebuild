@@ -37,6 +37,7 @@ pkg_nofetch() {
 
 src_prepare() {
 	epatch "${FILESDIR}/${PN}-isolation.patch"
+	epatch "${FILESDIR}/${PN}-dphi.patch"
 	epatch "${FILESDIR}/${PN}-systemlibs.patch"
 	epatch "${FILESDIR}/${PN}-subjets.patch"
 	# Weird build system
