@@ -4,8 +4,6 @@
 
 inherit eutils 
 
-EAPI=2
-
 DESCRIPTION="A numerical package for dark matter calculations in the MSSM."
 HOMEPAGE="http://www.physto.se/~edsjo/darksusy/"
 SRC_URI="${HOMEPAGE}/tars/${P}.tar.gz"

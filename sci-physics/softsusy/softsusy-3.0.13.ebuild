@@ -4,8 +4,6 @@
 
 inherit eutils
 
-EAPI=2
-
 DESCRIPTION="Provides a SUSY spectrum in the MSSM."
 HOMEPAGE="http://projects.hepforge.org/softsusy/"
 SRC_URI="http://www.hepforge.org/archive/${PN}/${P}.tar.gz"
