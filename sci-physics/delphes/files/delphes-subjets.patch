@@ -1,6 +1,6 @@
 diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
 --- Delphes_V_2.0.2/Delphes.cpp	2012-04-30 16:45:00.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-07-29 00:46:02.577569952 +0900
++++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-09-18 14:50:17.677222400 +0900
 @@ -273,6 +273,7 @@
    ExRootTreeWriter *treeWriter = new ExRootTreeWriter(outputfilename, "Analysis");
    ExRootTreeBranch *branchTauJet = treeWriter->NewBranch("TauJet", TRootTauJet::Class());
@@ -9,57 +9,63 @@ diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
    ExRootTreeBranch *branchElectron = treeWriter->NewBranch("Electron", TRootElectron::Class());
    ExRootTreeBranch *branchMuon = treeWriter->NewBranch("Muon", TRootMuon::Class());
    ExRootTreeBranch *branchPhoton = treeWriter->NewBranch("Photon", TRootPhoton::Class());
-@@ -298,6 +299,8 @@
+@@ -298,6 +299,9 @@
    
    vector<fastjet::PseudoJet> input_particles;//for FastJet algorithm
    vector<fastjet::PseudoJet> sorted_jets;
 +  vector<vector<fastjet::PseudoJet> > sorted_subjets;
 +  vector<bool> jet_ptmask;
++  vector<bool> massdrop;
    vector<TRootTracks> TrackCentral;  
    vector<PhysicsTower> towers;
    vector<D_Particle> electron;
-@@ -708,8 +711,9 @@
+@@ -361,6 +365,12 @@
+       treeReader->ReadEntry(entry);
+       treeWriter->Clear();
+       
++      // Subjet arrays managed at this level
++      // (Should be moved to JetsUtil class, like sorted_jets?)
++      sorted_subjets.clear();
++      jet_ptmask.clear();
++      massdrop.clear();
++      
+       electron.clear();
+       muon.clear();
+       gamma.clear();
+@@ -708,8 +718,9 @@
  
        
        // 2.2.3 ************* jets, B-tag, tau jets
 -      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO);
 -      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO);
-+      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO,sorted_subjets);
++      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO,sorted_subjets,massdrop);
 +      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO,jet_ptmask);
-+      JETRUN->RunSubJets(treeWriter, branchSubJet, sorted_subjets, jet_ptmask);
++      JETRUN->RunSubJets(treeWriter, branchSubJet, sorted_subjets, jet_ptmask, massdrop);
        JETRUN->RunTauJets(treeWriter,branchTauJet,sorted_jets,towers, TrackCentral,NTrackJet,EHADEEM,NCALO);
        
        treeWriter->Fill();
 diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-subjets/interface/JetsUtil.h
 --- Delphes_V_2.0.2/interface/JetsUtil.h	2012-04-30 16:40:27.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/interface/JetsUtil.h	2012-07-29 00:54:44.348788957 +0900
++++ Delphes_V_2.0.2-subjets/interface/JetsUtil.h	2012-09-18 14:47:50.869567914 +0900
 @@ -79,11 +79,13 @@
    ~JetsUtil() {delete DET; delete plugins;};
    void init(); // for constructors
  
 -  vector<fastjet::PseudoJet> RunJets(const vector<fastjet::PseudoJet>&  input_particles, const vector<TRootTracks> & TrackCentral, vector<int> &NTrackJet, vector<float> &EHADEEM, D_CaloTowerList list_of_active_towers, vector<int> &NCALO);
-+  vector<fastjet::PseudoJet> RunJets(const vector<fastjet::PseudoJet>&  input_particles, const vector<TRootTracks> & TrackCentral, vector<int> &NTrackJet, vector<float> &EHADEEM, D_CaloTowerList list_of_active_towers, vector<int> &NCALO, vector<vector<fastjet::PseudoJet> > &sorted_subjets);
++  vector<fastjet::PseudoJet> RunJets(const vector<fastjet::PseudoJet>&  input_particles, const vector<TRootTracks> & TrackCentral, vector<int> &NTrackJet, vector<float> &EHADEEM, D_CaloTowerList list_of_active_towers, vector<int> &NCALO, vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> &massdrop);
  
    vector<fastjet::PseudoJet> RunJetsResol(const vector<fastjet::PseudoJet>&  input_particles);
    
 -  void RunJetBtagging(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchJet,const vector<fastjet::PseudoJet> & sorted_jets,const TSimpleArray<TRootC::GenParticle> & NFCentralQ, const vector<int> &NTrackJet, const vector<float> &EHADEEM, const vector<int> &NCALO);
 +  void RunJetBtagging(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchJet,const vector<fastjet::PseudoJet> & sorted_jets,const TSimpleArray<TRootC::GenParticle> & NFCentralQ, const vector<int> &NTrackJet, const vector<float> &EHADEEM, const vector<int> &NCALO, vector<bool> &jet_ptmask);
 +  
-+  void RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> jet_ptmask);
++  void RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> jet_ptmask, vector<bool> massdrop);
    
    void RunTauJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchTauJet,const vector<fastjet::PseudoJet> & sorted_jets,const vector<PhysicsTower> & towers, const vector<TRootTracks> & TrackCentral, const vector<int> &NTrackJet, const vector<float> &EHADEEM,const vector<int> &NCALO);
  
-@@ -93,6 +95,7 @@
-   fastjet::JetDefinition::Plugin * plugins;
-   vector<fastjet::PseudoJet> inclusive_jets;
-   vector<fastjet::PseudoJet> sorted_jets;
-+  vector<vector<fastjet::PseudoJet> > sorted_subjets;
- };
- 
- #endif
 diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interface/SmearUtil.h
 --- Delphes_V_2.0.2/interface/SmearUtil.h	2012-04-30 16:40:28.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/interface/SmearUtil.h	2012-08-02 08:43:35.439591422 +0900
++++ Delphes_V_2.0.2-subjets/interface/SmearUtil.h	2012-09-18 14:20:18.712432835 +0900
 @@ -177,6 +177,7 @@
    float PTCUT_elec;
    float PTCUT_muon;
@@ -68,17 +74,19 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    float PTCUT_gamma;
    float PTCUT_taujet;
  
-@@ -195,6 +196,7 @@
+@@ -195,6 +196,9 @@
    int    JET_jetalgo;
    double JET_seed;
    double JET_overlap;
 +  double JET_dcut;
++  double JET_massdrop;
++  double JET_Rijcut;
    
    // MidPoint algorithm definition
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-08-02 10:38:31.482850368 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-18 14:51:50.789271753 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -92,27 +100,42 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
  }
  
 -vector<fastjet::PseudoJet> JetsUtil::RunJets(const vector<fastjet::PseudoJet>&  input_particles,  const vector<TRootTracks> & TrackCentral,  vector<int> &NTrackJet, vector<float> &EHADEEM,D_CaloTowerList list_of_active_towers, vector<int> &NCALO)
-+vector<fastjet::PseudoJet> JetsUtil::RunJets(const vector<fastjet::PseudoJet>&  input_particles,  const vector<TRootTracks> & TrackCentral,  vector<int> &NTrackJet, vector<float> &EHADEEM,D_CaloTowerList list_of_active_towers, vector<int> &NCALO, vector<vector<fastjet::PseudoJet> > &sorted_subjets)
++vector<fastjet::PseudoJet> JetsUtil::RunJets(const vector<fastjet::PseudoJet>&  input_particles,  const vector<TRootTracks> & TrackCentral,  vector<int> &NTrackJet, vector<float> &EHADEEM,D_CaloTowerList list_of_active_towers, vector<int> &NCALO, vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> &massdrop)
  {
    inclusive_jets.clear();
    sorted_jets.clear();
-+  sorted_subjets.clear();
++  
    // run the jet clustering with the above jet definition
    if(input_particles.size()!=0)
      {
-@@ -135,6 +137,11 @@
+@@ -135,6 +137,26 @@
        
        // sort jets into increasing pt
        sorted_jets = sorted_by_pt(inclusive_jets);
 +      
-+      // get subjets
-+      for(unsigned int i = 0; i < sorted_jets.size(); i++)
-+         sorted_subjets.push_back(sorted_by_pt(sorted_jets[i].exclusive_subjets(DET->JET_dcut)));
++      // get subjets, applying mass drop condition
++      for(unsigned int i = 0; i < sorted_jets.size(); i++) {
++         fastjet::PseudoJet this_jet = sorted_jets[i];
++         fastjet::PseudoJet parent1, parent2;
++         bool has_parents = false;
++         while((has_parents = clust_seq.has_parents(this_jet, parent1, parent2))) {
++             if(parent1.m() < parent2.m()) swap(parent1, parent2);
++             if(parent1.m() < DET->JET_massdrop * this_jet.m() && 
++                    parent1.kt_distance(parent2) > pow(DET->JET_Rijcut,2) * this_jet.m2())
++                break;
++             else 
++                this_jet = parent1;
++         }
++         if(has_parents) sorted_subjets.push_back(sorted_by_pt(this_jet.exclusive_subjets(DET->JET_dcut)));
++         else sorted_subjets.push_back(sorted_by_pt(sorted_jets[i].exclusive_subjets(DET->JET_dcut)));
++         
++         massdrop.push_back(has_parents);
++      }
 +      
        //Bin tracks to make the link 
        float  iEtaTrack[TrackCentral.size()];
        float  iPhiTrack[TrackCentral.size()];
-@@ -197,10 +204,12 @@
+@@ -197,10 +219,12 @@
  }
  
  
@@ -126,7 +149,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +224,32 @@
+@@ -215,10 +239,33 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
@@ -137,7 +160,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    } // for itJet : loop on all jets
  }
  
-+void JetsUtil::RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> jet_ptmask)
++void JetsUtil::RunSubJets(ExRootTreeWriter *treeWriter, ExRootTreeBranch *branchSubjet, const vector<vector<fastjet::PseudoJet> > &sorted_subjets, vector<bool> jet_ptmask, vector<bool> massdrop)
 +{
 +  TRootSubJet *elementSubjet;
 +  int jet_count = 0;
@@ -149,6 +172,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +            elementSubjet = (TRootSubJet *) branchSubjet->NewEntry();
 +            elementSubjet->Set(tj.px(), tj.py(), tj.pz(), tj.E());
 +            elementSubjet->Child = jet_count;
++            elementSubjet->MassDrop = massdrop[i];
 +          }
 +        }
 +        jet_count++;
@@ -161,7 +185,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    TRootTauJet *elementTauJet;
 diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil.cc
 --- Delphes_V_2.0.2/src/SmearUtil.cc	2012-04-30 16:47:55.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-08-02 08:41:18.545984394 +0900
++++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-09-18 14:00:05.653107587 +0900
 @@ -122,6 +122,7 @@
    PTCUT_elec      = 10.0;
    PTCUT_muon      = 10.0;
@@ -170,17 +194,19 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
    PTCUT_gamma     = 10.0;
    PTCUT_taujet    = 10.0;
  
-@@ -140,7 +141,8 @@
+@@ -140,7 +141,10 @@
    JET_jetalgo      = 2;              // 1 for Cone algorithm, 2 for MidPoint algorithm, 3 for SIScone algorithm, 4 for kt algorithm
    JET_seed         = 1.0;            // minimum seed to start jet reconstruction
    JET_Eflow        = 0;		     // 1 for Energy flow in jets reco ; 0 if not
 -
-+  JET_dcut         = 0.2;
++  JET_dcut         = 0.2;        // distance parameter for exclusive subjets
++  JET_massdrop     = 0.667;      // subjet mass drop threshold
++  JET_Rijcut       = 0.2;        // minimum distance between parent subjets
 +  
    // Tagging definition
    BTAG_func_b      = "0.4  + 0*x + 0*y";	// efficiency functions (x=Pt, y=eta)  in ROOT::TF2 format
    BTAG_func_c      = "0.1  + 0*x + 0*y";
-@@ -287,6 +289,7 @@
+@@ -287,6 +291,7 @@
    PTCUT_elec      = DET.PTCUT_elec;
    PTCUT_muon      = DET.PTCUT_muon;
    PTCUT_jet       = DET.PTCUT_jet;
@@ -188,15 +214,17 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
    PTCUT_gamma     = DET.PTCUT_gamma;
    PTCUT_taujet    = DET.PTCUT_taujet;
  
-@@ -306,6 +309,7 @@
+@@ -306,6 +311,9 @@
    JET_jetalgo      = DET.JET_jetalgo;
    JET_seed         = DET.JET_seed;
    JET_Eflow        = DET.JET_Eflow;
 +  JET_dcut         = DET.JET_dcut;
++  JET_massdrop     = DET.JET_massdrop;
++  JET_Rijcut       = DET.JET_Rijcut;
  
    // Tagging definition
    BTAG_func_b      = DET.BTAG_func_b;
-@@ -446,6 +450,7 @@
+@@ -446,6 +454,7 @@
    PTCUT_elec      = DET.PTCUT_elec;
    PTCUT_muon      = DET.PTCUT_muon;
    PTCUT_jet       = DET.PTCUT_jet;
@@ -204,15 +232,17 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
    PTCUT_gamma     = DET.PTCUT_gamma;
    PTCUT_taujet    = DET.PTCUT_taujet;
  
-@@ -464,6 +469,7 @@
+@@ -464,6 +473,9 @@
    JET_jetalgo      = DET.JET_jetalgo;
    JET_seed         = DET.JET_seed;
    JET_Eflow        = DET.JET_Eflow;
 +  JET_dcut         = DET.JET_dcut;
++  JET_massdrop     = DET.JET_massdrop;
++  JET_Rijcut       = DET.JET_Rijcut;
  
    // Tagging definition
    BTAG_func_b      = DET.BTAG_func_b;
-@@ -658,6 +664,7 @@
+@@ -658,6 +670,7 @@
      else if(strstr(temp_string.c_str(),"PTCUT_elec"))       {curstring >> varname >> value; PTCUT_elec        = value;}
      else if(strstr(temp_string.c_str(),"PTCUT_muon"))       {curstring >> varname >> value; PTCUT_muon        = value;}
      else if(strstr(temp_string.c_str(),"PTCUT_jet"))        {curstring >> varname >> value; PTCUT_jet         = value;}
@@ -220,15 +250,19 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
      else if(strstr(temp_string.c_str(),"PTCUT_gamma"))      {curstring >> varname >> value; PTCUT_gamma       = value;}
      else if(strstr(temp_string.c_str(),"PTCUT_taujet"))     {curstring >> varname >> value; PTCUT_taujet      = value;}
      else if(strstr(temp_string.c_str(),"ZDC_gamma_E"))      {curstring >> varname >> value; ZDC_gamma_E      = value;}
-@@ -673,6 +680,7 @@
+@@ -673,7 +686,10 @@
      else if(strstr(temp_string.c_str(),"JET_jetalgo"))      {curstring >> varname >> ivalue;JET_jetalgo       = ivalue;}
      else if(strstr(temp_string.c_str(),"JET_seed"))         {curstring >> varname >> value; JET_seed          = value;}
      else if(strstr(temp_string.c_str(),"JET_Eflow"))        {curstring >> varname >> ivalue; JET_Eflow        = ivalue;}
+- 
 +    else if(strstr(temp_string.c_str(),"JET_dcut"))        {curstring >> varname >> ivalue; JET_dcut        = ivalue;}
-  
++    else if(strstr(temp_string.c_str(),"JET_massdrop"))        {curstring >> varname >> ivalue; JET_massdrop        = ivalue;}
++    else if(strstr(temp_string.c_str(),"JET_Rijcut"))        {curstring >> varname >> ivalue; JET_Rijcut        = ivalue;}
++
      else if(strstr(temp_string.c_str(),"BTAG_func_b"))      {curstring >> varname >> svalue; BTAG_func_b     = svalue;}
      else if(strstr(temp_string.c_str(),"BTAG_func_c"))	    {curstring >> varname >> svalue; BTAG_func_c     = svalue;}
-@@ -1057,6 +1065,8 @@
+     else if(strstr(temp_string.c_str(),"BTAG_func_l"))      {curstring >> varname >> svalue; BTAG_func_l     = svalue;}
+@@ -1057,6 +1073,8 @@
  	<< left << setw(20) <<PTCUT_muon         <<""<< right << setw(10)<<"*"<<"\n";
    f_out << left << setw(40) <<"* Minimum pT for jets: "<<""
  	<< left << setw(20) <<PTCUT_jet          <<""<< right << setw(10)<<"*"<<"\n";
@@ -239,8 +273,8 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
    f_out << left << setw(40) <<"* Minimum pT for photons: "<<""
 diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h
 --- Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-04-30 16:43:10.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-07-29 00:41:29.231311933 +0900
-@@ -459,6 +459,20 @@
++++ Delphes_V_2.0.2-subjets/Utilities/ExRootAnalysis/interface/BlockClasses.h	2012-09-18 14:06:35.110385709 +0900
+@@ -459,6 +459,21 @@
    ClassDef(TRootJet, 1)
  };
  
@@ -254,6 +288,7 @@ diff -urN Delphes_V_2.0.2/Utilities/ExRootAnalysis/interface/BlockClasses.h Delp
 +  static TCompare *fgCompare; //!
 +
 +  int Child; // index of child jet
++  bool MassDrop; // child jet meets mass drop conditions, and subjets reflect pruning
 +  
 +  ClassDef(TRootSubJet, 1)
 +};
