@@ -1,6 +1,6 @@
 diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
 --- Delphes_V_2.0.2/Delphes.cpp	2012-04-30 16:45:00.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-09-18 14:50:17.677222400 +0900
++++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-09-19 13:50:04.745406231 +0900
 @@ -273,6 +273,7 @@
    ExRootTreeWriter *treeWriter = new ExRootTreeWriter(outputfilename, "Analysis");
    ExRootTreeBranch *branchTauJet = treeWriter->NewBranch("TauJet", TRootTauJet::Class());
@@ -32,12 +32,18 @@ diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
        electron.clear();
        muon.clear();
        gamma.clear();
-@@ -708,8 +718,9 @@
+@@ -708,8 +718,15 @@
  
        
        // 2.2.3 ************* jets, B-tag, tau jets
 -      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO);
 -      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO);
++      if(entry == 0) {
++	for(unsigned int p = 0; p < input_particles.size(); p++) {
++	    fastjet::PseudoJet tjet = input_particles[p];
++	    cout << tjet.px() << ' ' << tjet.py() << ' ' << tjet.pz() << ' ' << tjet.E() << endl;
++	}
++      }
 +      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO,sorted_subjets,massdrop);
 +      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO,jet_ptmask);
 +      JETRUN->RunSubJets(treeWriter, branchSubJet, sorted_subjets, jet_ptmask, massdrop);
