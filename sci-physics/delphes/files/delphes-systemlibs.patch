@@ -1,12 +1,12 @@
 diff -urN Delphes_V_2.0.2/genMakefile.tcl Delphes_V_2.0.2-systemlibs/genMakefile.tcl
 --- Delphes_V_2.0.2/genMakefile.tcl	2012-04-30 16:44:59.000000000 +0900
-+++ Delphes_V_2.0.2-systemlibs/genMakefile.tcl	2012-07-23 00:14:25.017791118 +0900
++++ Delphes_V_2.0.2-systemlibs/genMakefile.tcl	2012-09-21 17:26:56.022226759 +0900
 @@ -229,9 +229,9 @@
  
  SrcSuf = cc
  
 -CXXFLAGS += $(ROOTCFLAGS) -DDROP_CGAL -I. -Iinterface -IUtilities/mcfio -IUtilities/stdhep -IUtilities/Hector/include -IUtilities/CDFCones/interface -IExamples -IUtilities/frog -IUtilities/ExRootAnalysis/interface -IUtilities/Fastjet/include/fastjet -IUtilities/Fastjet/plugins/CDFCones -IUtilities/Fastjet/plugins/CDFCones/interface -IUtilities/Fastjet/plugins/SISCone -IUtilities/CLHEP/Units -IUtilities/HepMC/interface
-+CXXFLAGS += $(ROOTCFLAGS) -DDROP_CGAL -I. -Iinterface -IUtilities/mcfio -IUtilities/stdhep -IUtilities/Hector/include -IExamples -IUtilities/frog -IUtilities/ExRootAnalysis/interface -IUtilities/Fastjet/plugins/CDFCones/interface  
++CXXFLAGS += $(ROOTCFLAGS) -DDROP_CGAL -I. -Iinterface -IUtilities/mcfio -IUtilities/stdhep -IUtilities/Hector/include -IExamples -IUtilities/frog -IUtilities/ExRootAnalysis/interface -IUtilities/Fastjet/plugins/CDFCones/interface
  # -pg -g
 -LIBS = $(ROOTLIBS) -lEG $(SYSLIBS)
 +LIBS = $(ROOTLIBS) -lEG $(SYSLIBS) $(shell fastjet-config --libs --plugins) $(shell clhep-config --libs) -lHepMC
@@ -42,7 +42,7 @@ diff -urN Delphes_V_2.0.2/interface/HepMCConverter.h Delphes_V_2.0.2-systemlibs/
  
 diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-systemlibs/interface/JetsUtil.h
 --- Delphes_V_2.0.2/interface/JetsUtil.h	2012-04-30 16:40:27.000000000 +0900
-+++ Delphes_V_2.0.2-systemlibs/interface/JetsUtil.h	2012-07-23 00:12:26.616397701 +0900
++++ Delphes_V_2.0.2-systemlibs/interface/JetsUtil.h	2012-09-21 16:47:35.056162861 +0900
 @@ -50,19 +50,19 @@
  #include <fstream>
  #include <iomanip>
@@ -57,13 +57,15 @@ diff -urN Delphes_V_2.0.2/interface/JetsUtil.h Delphes_V_2.0.2-systemlibs/interf
 +#include "fastjet/config.h"
  
  // make sure we have what is needed
- #ifdef ENABLE_PLUGIN_SISCONE
+-#ifdef ENABLE_PLUGIN_SISCONE
 -#  include "SISConePlugin.hh"
++#ifdef FASTJET_ENABLE_PLUGIN_SISCONE
 +#  include "fastjet/SISConePlugin.hh"
  #endif
- #ifdef ENABLE_PLUGIN_CDFCONES
+-#ifdef ENABLE_PLUGIN_CDFCONES
 -#  include "CDFMidPointPlugin.hh"
 -#  include "CDFJetCluPlugin.hh"
++#ifdef FASTJET_ENABLE_PLUGIN_CDFCONES
 +#  include "fastjet/CDFMidPointPlugin.hh"
 +#  include "fastjet/CDFJetCluPlugin.hh"
  #endif
@@ -121,3 +123,33 @@ diff -urN Delphes_V_2.0.2/src/HepMCConverter.cc Delphes_V_2.0.2-systemlibs/src/H
  
  //-------------------------------------------------------------------------
  int HepMCConverter::find_in_map( const std::map<HepMC::GenParticle*,int>& m, HepMC::GenParticle *p) const
+diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-systemlibs/src/JetsUtil.cc
+--- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
++++ Delphes_V_2.0.2-systemlibs/src/JetsUtil.cc	2012-09-21 16:48:09.294540408 +0900
+@@ -71,7 +71,7 @@
+   default:
+   case 1: {
+     // set up a CDF midpoint jet definition
+-#ifdef ENABLE_PLUGIN_CDFCONES
++#ifdef FASTJET_ENABLE_PLUGIN_CDFCONES
+     plugins = new fastjet::CDFJetCluPlugin(DET->JET_seed,DET->JET_coneradius,DET->JET_C_adjacencycut,DET->JET_C_maxiterations,DET->JET_C_iratch,DET->JET_overlap);
+     jet_def = fastjet::JetDefinition(plugins);
+ #else
+@@ -82,7 +82,7 @@
+     
+   case 2: {
+     // set up a CDF midpoint jet definition
+-#ifdef ENABLE_PLUGIN_CDFCONES
++#ifdef FASTJET_ENABLE_PLUGIN_CDFCONES
+     plugins = new fastjet::CDFMidPointPlugin (DET->JET_seed,DET->JET_coneradius,DET->JET_M_coneareafraction,DET->JET_M_maxpairsize,DET->JET_M_maxiterations,DET->JET_overlap);
+     jet_def = fastjet::JetDefinition(plugins);
+ #else
+@@ -93,7 +93,7 @@
+     
+   case 3: {
+     // set up a siscone jet definition
+-#ifdef ENABLE_PLUGIN_SISCONE
++#ifdef FASTJET_ENABLE_PLUGIN_SISCONE
+     plugins = new fastjet::SISConePlugin (DET->JET_coneradius,DET->JET_overlap,DET->JET_S_npass, DET->JET_S_protojet_ptmin);
+     jet_def = fastjet::JetDefinition(plugins);
+ #else
