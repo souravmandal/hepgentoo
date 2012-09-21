@@ -92,7 +92,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 18:19:44.036037659 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 18:57:47.824724765 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -110,7 +110,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
  {
    inclusive_jets.clear();
    sorted_jets.clear();
-@@ -133,8 +134,31 @@
+@@ -133,8 +134,33 @@
        double ptmin = 5.0;
        inclusive_jets = clust_seq.inclusive_jets(ptmin);
        
@@ -133,8 +133,10 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +             else 
 +                this_jet = parent1;
 +         }
-+         if(has_parents) sorted_subjets.push_back(sorted_by_pt(this_jet.exclusive_subjets(DET->JET_dcut)));
-+         else sorted_subjets.push_back(sorted_by_pt(sorted_jets[i].exclusive_subjets(DET->JET_dcut)));
++         //if(has_parents) 
++         //   sorted_subjets.push_back(sorted_by_pt(this_jet.exclusive_subjets(DET->JET_dcut)));
++         //else 
++            sorted_subjets.push_back(sorted_by_pt(sorted_jets[i].exclusive_subjets(DET->JET_dcut)));
 +         
 +         massdrop.push_back(has_parents);
 +      }
@@ -142,7 +144,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
        //Bin tracks to make the link 
        float  iEtaTrack[TrackCentral.size()];
        float  iPhiTrack[TrackCentral.size()];
-@@ -197,10 +221,12 @@
+@@ -197,10 +223,12 @@
  }
  
  
@@ -156,7 +158,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +241,33 @@
+@@ -215,10 +243,33 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
