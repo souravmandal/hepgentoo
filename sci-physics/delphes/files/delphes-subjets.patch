@@ -92,7 +92,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 18:57:47.824724765 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 19:03:33.912737173 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -114,7 +114,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
        double ptmin = 5.0;
        inclusive_jets = clust_seq.inclusive_jets(ptmin);
        
-+      cout << "Jet algo: " << jet_def.jet_algorithm() << ' ' << clust_seq.jet_def().jet_algorithm() << endl;
++      //cout << "Jet algo: " << jet_def.jet_algorithm() << ' ' << clust_seq.jet_def().jet_algorithm() << endl;
 +      
 +      
        // sort jets into increasing pt
