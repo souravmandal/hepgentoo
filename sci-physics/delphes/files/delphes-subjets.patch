@@ -92,7 +92,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 16:25:31.658104633 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 18:19:44.036037659 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -110,17 +110,13 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
  {
    inclusive_jets.clear();
    sorted_jets.clear();
-@@ -129,12 +130,35 @@
-   if(input_particles.size()!=0)
-     {
-       fastjet::ClusterSequence clust_seq(input_particles, jet_def);
-+      
-+      cout << "Jet algo: " << jet_def.jet_algorithm() << endl;
-+      
-       // extract the inclusive jets with pt > 5 GeV
+@@ -133,8 +134,31 @@
        double ptmin = 5.0;
        inclusive_jets = clust_seq.inclusive_jets(ptmin);
        
++      cout << "Jet algo: " << jet_def.jet_algorithm() << ' ' << clust_seq.jet_def().jet_algorithm() << endl;
++      
++      
        // sort jets into increasing pt
        sorted_jets = sorted_by_pt(inclusive_jets);
 +      
