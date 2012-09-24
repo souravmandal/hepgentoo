@@ -1,6 +1,6 @@
 diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
 --- Delphes_V_2.0.2/Delphes.cpp	2012-04-30 16:45:00.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-09-20 17:58:10.507315494 +0900
++++ Delphes_V_2.0.2-subjets/Delphes.cpp	2012-09-24 14:33:00.221931379 +0900
 @@ -273,6 +273,7 @@
    ExRootTreeWriter *treeWriter = new ExRootTreeWriter(outputfilename, "Analysis");
    ExRootTreeBranch *branchTauJet = treeWriter->NewBranch("TauJet", TRootTauJet::Class());
@@ -32,18 +32,12 @@ diff -urN Delphes_V_2.0.2/Delphes.cpp Delphes_V_2.0.2-subjets/Delphes.cpp
        electron.clear();
        muon.clear();
        gamma.clear();
-@@ -708,8 +718,15 @@
+@@ -708,8 +718,9 @@
  
        
        // 2.2.3 ************* jets, B-tag, tau jets
 -      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO);
 -      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO);
-+      if(entry == 0) {
-+	for(unsigned int p = 0; p < input_particles.size(); p++) {
-+	    fastjet::PseudoJet tjet = input_particles[p];
-+	    cout << tjet.px() << ' ' << tjet.py() << ' ' << tjet.pz() << ' ' << tjet.E() << endl;
-+	}
-+      }
 +      sorted_jets=JETRUN->RunJets(input_particles, TrackCentral,NTrackJet,EHADEEM,list_of_active_towers,NCALO,sorted_subjets,massdrop);
 +      JETRUN->RunJetBtagging(treeWriter, branchJet,sorted_jets,NFCentralQ,NTrackJet,EHADEEM,NCALO,jet_ptmask);
 +      JETRUN->RunSubJets(treeWriter, branchSubJet, sorted_subjets, jet_ptmask, massdrop);
@@ -92,7 +86,7 @@ diff -urN Delphes_V_2.0.2/interface/SmearUtil.h Delphes_V_2.0.2-subjets/interfac
    double JET_M_coneareafraction;
 diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.cc
 --- Delphes_V_2.0.2/src/JetsUtil.cc	2012-04-30 16:40:17.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-21 19:03:33.912737173 +0900
++++ Delphes_V_2.0.2-subjets/src/JetsUtil.cc	2012-09-24 14:32:30.618506554 +0900
 @@ -32,6 +32,7 @@
  ***********************************************************************/
  
@@ -110,13 +104,8 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
  {
    inclusive_jets.clear();
    sorted_jets.clear();
-@@ -133,8 +134,33 @@
-       double ptmin = 5.0;
-       inclusive_jets = clust_seq.inclusive_jets(ptmin);
+@@ -135,6 +136,28 @@
        
-+      //cout << "Jet algo: " << jet_def.jet_algorithm() << ' ' << clust_seq.jet_def().jet_algorithm() << endl;
-+      
-+      
        // sort jets into increasing pt
        sorted_jets = sorted_by_pt(inclusive_jets);
 +      
@@ -133,9 +122,9 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
 +             else 
 +                this_jet = parent1;
 +         }
-+         //if(has_parents) 
-+         //   sorted_subjets.push_back(sorted_by_pt(this_jet.exclusive_subjets(DET->JET_dcut)));
-+         //else 
++         if(has_parents) 
++            sorted_subjets.push_back(sorted_by_pt(this_jet.exclusive_subjets(DET->JET_dcut)));
++         else 
 +            sorted_subjets.push_back(sorted_by_pt(sorted_jets[i].exclusive_subjets(DET->JET_dcut)));
 +         
 +         massdrop.push_back(has_parents);
@@ -144,7 +133,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
        //Bin tracks to make the link 
        float  iEtaTrack[TrackCentral.size()];
        float  iPhiTrack[TrackCentral.size()];
-@@ -197,10 +223,12 @@
+@@ -197,10 +220,12 @@
  }
  
  
@@ -158,7 +147,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    for (unsigned int i = 0; i < sorted_jets.size(); i++) {
      JET.SetPxPyPzE(sorted_jets[i].px(),sorted_jets[i].py(),sorted_jets[i].pz(),sorted_jets[i].E());
      if(JET.Pt() > DET->PTCUT_jet)
-@@ -215,10 +243,33 @@
+@@ -215,10 +240,33 @@
  	bool btag=false;
  	if((fabs(JET.Eta()) < DET->CEN_max_tracker && DET->Btaggedjet(JET, NFCentralQ)))btag=true;
  	elementJet->Btag = btag;
@@ -194,7 +183,7 @@ diff -urN Delphes_V_2.0.2/src/JetsUtil.cc Delphes_V_2.0.2-subjets/src/JetsUtil.c
    TRootTauJet *elementTauJet;
 diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil.cc
 --- Delphes_V_2.0.2/src/SmearUtil.cc	2012-04-30 16:47:55.000000000 +0900
-+++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-09-18 14:00:05.653107587 +0900
++++ Delphes_V_2.0.2-subjets/src/SmearUtil.cc	2012-09-24 14:35:41.647247920 +0900
 @@ -122,6 +122,7 @@
    PTCUT_elec      = 10.0;
    PTCUT_muon      = 10.0;
@@ -264,9 +253,9 @@ diff -urN Delphes_V_2.0.2/src/SmearUtil.cc Delphes_V_2.0.2-subjets/src/SmearUtil
      else if(strstr(temp_string.c_str(),"JET_seed"))         {curstring >> varname >> value; JET_seed          = value;}
      else if(strstr(temp_string.c_str(),"JET_Eflow"))        {curstring >> varname >> ivalue; JET_Eflow        = ivalue;}
 - 
-+    else if(strstr(temp_string.c_str(),"JET_dcut"))        {curstring >> varname >> ivalue; JET_dcut        = ivalue;}
-+    else if(strstr(temp_string.c_str(),"JET_massdrop"))        {curstring >> varname >> ivalue; JET_massdrop        = ivalue;}
-+    else if(strstr(temp_string.c_str(),"JET_Rijcut"))        {curstring >> varname >> ivalue; JET_Rijcut        = ivalue;}
++    else if(strstr(temp_string.c_str(),"JET_dcut"))        {curstring >> varname >> value; JET_dcut        = value;}
++    else if(strstr(temp_string.c_str(),"JET_massdrop"))        {curstring >> varname >> value; JET_massdrop        = value;}
++    else if(strstr(temp_string.c_str(),"JET_Rijcut"))        {curstring >> varname >> value; JET_Rijcut        = value;}
 +
      else if(strstr(temp_string.c_str(),"BTAG_func_b"))      {curstring >> varname >> svalue; BTAG_func_b     = svalue;}
      else if(strstr(temp_string.c_str(),"BTAG_func_c"))	    {curstring >> varname >> svalue; BTAG_func_c     = svalue;}

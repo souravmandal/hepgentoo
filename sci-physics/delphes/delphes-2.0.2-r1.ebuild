@@ -21,7 +21,7 @@ IUSE="examples"
 
 COMMON_DEPEND="sci-physics/root
 			sci-physics/clhep
-			sci-physics/fastjet
+			sci-physics/fastjet[plugins]
 			sci-physics/hepmc"
 DEPEND="dev-lang/tcl
 		${COMMON_DEPEND}"
