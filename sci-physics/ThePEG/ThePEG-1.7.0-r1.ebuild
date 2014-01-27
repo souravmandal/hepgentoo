@@ -4,6 +4,8 @@
 
 EAPI=3
 
+inherit eutils
+
 DESCRIPTION="Toolkit for High Energy Physics Event Generation"
 HOMEPAGE="http://home.thep.lu.se/~leif/ThePEG/"
 SRC_URI="http://www.hepforge.org/archive/thepeg/${P}.tar.bz2"
@@ -24,13 +26,18 @@ DEPEND="dev-lang/perl
 		lhapdf? ( sci-physics/lhapdf )"
 RDEPEND="${DEPEND}"
 
+src_prepare() {
+	epatch ${FILESDIR}/${P}_cstddef.patch
+	epatch ${FILESDIR}/${P}_zlib.patch
+}
+
 # Enable Rivet in the future when there's an ebuild
 src_configure() {
 	econf \
 		--without-rivet \
 		"$(use_with java javagui )" \
-		"$(use_with lhapdf )" \
-		"$(use_enable unitchecks)" \
+		"$(use_with lhapdf LHAPDF )" \
+		"$(use_enable unitchecks )" \
 		"$(use_with zlib )" \
 		|| die "econf failed"
 }
