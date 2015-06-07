@@ -4,7 +4,7 @@
 
 EAPI=3
 
-inherit eutils
+inherit eutils flag-o-matic
 
 DESCRIPTION="Toolkit for High Energy Physics Event Generation"
 HOMEPAGE="http://home.thep.lu.se/~leif/ThePEG/"
@@ -43,7 +43,10 @@ src_configure() {
 }
 
 src_compile() {
-	emake || die "emake failed"
+	# Needed for >=gcc-4.7
+	append-cxxflags $(test-flags-CXX -fpermissive)
+	append-cxxflags "-include unistd.h"
+	emake CXXFLAGS="${CXXFLAGS}" || die "emake failed"
 
 	# Docs
 	if use doc; then
